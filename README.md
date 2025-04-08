@@ -8,7 +8,7 @@ This repository contains scripts used during my PhD research. The scripts are wr
 
 The repository is divided into several directories. Here is an example list:
 
-- [`Histograms`](Histograms/README.md) – This ROOT macro generates histograms of interaction types from a Geant4 simulation ntuple. It is designed to visualize the types of physical processes occurring during particle transport.
+- [`Histograms`](Histograms/) – This ROOT macro generates histograms of interaction types from a Geant4 simulation ntuple. It is designed to visualize the types of physical processes occurring during particle transport.
 - _..._
 
 Clicking the link to a local `README.md` will provide you with detailed information about that particular script.
