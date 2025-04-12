@@ -11,26 +11,35 @@
 
 // Helper function to set X axis bin labels and log-scale Y axis
 void SetAxisLabels(TH1F* hist) {
-    const char* labels[16] = {
+    const char* labels[25] = {
         "UserStepMax/Transportation",
-        "Photoelectric (phot)",
-        "Compton (compt)",
-        "Pair production (conv)",
-        "Rayleigh (Rayl)",
+        "Photoelectric Effect (phot)",
+        "Compton Scattering (compt)",
+        "Pair Production (conv)",
+        "Rayleigh Scattering (Rayl)",
         "Electron Ionization (eIoni)",
         "Multiple Coulomb Scattering (msc)",
         "e+ e- Annihilation (annihil)",
         "Bremsstrahlung (eBrem)",
         "Radioactive Decay",
-        "Auger Effect",
-        "X-ray Fluorescence (phot_fluo)",
         "Hadronic Elastic (hadElastic)",
         "Neutron Inelastic (neutronInelastic)",
         "Neutron Capture (nCapture)",
-        "Ion Ionization (ionIoni)"
+        "Proton Inelastic (protonInelastic)",
+        "Alpha Inelastic (alphaInelastic)",
+        "Ion Ionization (ionIoni)",
+        "Auger Effect (Auger)",
+        "X-ray Fluorescence (phot_fluo)",
+        "Particle-Induced X-ray Emission (pixe)",
+        "Muon Ionization (muIoni)",
+        "Muon Bremsstrahlung (muBrems)",
+        "Muon Pair Production (muPairProd)",
+        "Cerenkov Radiation (Cerenkov)",
+        "Scintillation",
+        "Synchrotron Radiation"
     };
 
-    for (int i = 0; i < 16; ++i) {
+    for (int i = 0; i < 25; ++i) {
         hist->GetXaxis()->SetBinLabel(i + 1, labels[i]);
     }
 
@@ -96,37 +105,55 @@ void Histogram(const char* fileName = "") {
 
     // Draw and configure histogram for all particles
     std::cout << "[INFO] Generating histogram for all particles..." << std::endl;
-    tree->Draw("VoxelProcessTypeId>>hAllParticles(16,-0.5,15.5)", "", "");
+    tree->Draw("ProcessTypeId>>hAllParticles(25,-0.5,24.5)", "", "");
     TH1F* hAllParticles = (TH1F*)gDirectory->Get("hAllParticles");
     if (hAllParticles) {
         hAllParticles->SetTitle("All Particles: Interaction Type Distribution");
         hAllParticles->SetLineColor(kBlack);
         hAllParticles->SetLineWidth(2);
+        hAllParticles->Scale(hAllParticles->GetMaximum()/100000000,"WIDTH");
         SetAxisLabels(hAllParticles);
     }
 
     // Draw and configure histogram for all photons
     std::cout << "[INFO] Generating histogram for all photons..." << std::endl;
-    tree->Draw("VoxelProcessTypeId>>hAllPhotons(16,-0.5,15.5)", "VoxelTrkTypeId==1", "");
+    tree->Draw("ProcessTypeId>>hAllPhotons(25,-0.5,24.5)", "VoxelTrkTypeId==1", "");
     TH1F* hAllPhotons = (TH1F*)gDirectory->Get("hAllPhotons");
     if (hAllPhotons) {
         hAllPhotons->SetTitle("All Photons: Interaction Type Distribution");
         hAllPhotons->SetLineColor(kBlue);
         hAllPhotons->SetLineStyle(2);
         hAllPhotons->SetLineWidth(2);
+        hAllPhotons->Scale(hAllPhotons->GetMaximum()/100000000,"WIDTH");
+
         SetAxisLabels(hAllPhotons);
     }
 
+    
     // Draw and configure histogram for primary photons only
     std::cout << "[INFO] Generating histogram for primary photons..." << std::endl;
-    tree->Draw("VoxelProcessTypeId>>hPrimaryPhotons(16,-0.5,15.5)", "VoxelTrkTypeId==1&&VoxelTrkId==1", "");
+    tree->Draw("ProcessTypeId>>hPrimaryPhotons(25,-0.5,24.5)", "VoxelTrkTypeId==1&&VoxelTrkId==1", "");
     TH1F* hPrimaryPhotons = (TH1F*)gDirectory->Get("hPrimaryPhotons");
     if (hPrimaryPhotons) {
         hPrimaryPhotons->SetTitle("Primary Photons Only: Interaction Type Distribution");
         hPrimaryPhotons->SetLineColor(kRed);
         hPrimaryPhotons->SetLineStyle(3);
         hPrimaryPhotons->SetLineWidth(2);
+        hPrimaryPhotons->Scale(hPrimaryPhotons->GetMaximum()/100000000,"WIDTH");
         SetAxisLabels(hPrimaryPhotons);
+    }
+
+    // Draw and configure histogram for Secondary photons
+    std::cout << "[INFO] Generating histogram for secondary photons..." << std::endl;
+    tree->Draw("ProcessTypeId>>hSecPhotons(25,-0.5,24.5)", "VoxelTrkTypeId==1&&VoxelTrkId>1", "");
+    TH1F* hSecPhotons = (TH1F*)gDirectory->Get("hSecPhotons");
+    if (hSecPhotons) {
+        hSecPhotons->SetTitle("Secondary Photons: Interaction Type Distribution");
+        hSecPhotons->SetLineColor(kGreen);
+        hSecPhotons->SetLineStyle(4);
+        hSecPhotons->SetLineWidth(2);
+        hSecPhotons->Scale(hSecPhotons->GetMaximum()/100000000,"WIDTH");
+        SetAxisLabels(hSecPhotons);
     }
 
     std::cout << "[INFO] Drawing combined canvas..." << std::endl;
@@ -136,11 +163,13 @@ void Histogram(const char* fileName = "") {
     hAllParticles->Draw("HIST");
     hAllPhotons->Draw("HIST SAME");
     hPrimaryPhotons->Draw("HIST SAME");
+    hSecPhotons->Draw("HIST SAME");
 
     TLegend* legend = new TLegend(0.7, 0.75, 0.9, 0.9);
     legend->AddEntry(hAllParticles, "All Particles", "l");
     legend->AddEntry(hAllPhotons, "All Photons", "l");
     legend->AddEntry(hPrimaryPhotons, "Primary Photons", "l");
+    legend->AddEntry(hSecPhotons, "Secondary Photons", "l");
     legend->Draw();
 
     std::cout << "[INFO] Saving: hist_all_combined.pdf" << std::endl;
@@ -148,7 +177,7 @@ void Histogram(const char* fileName = "") {
 
     std::cout << "[INFO] Drawing and saving individual canvases..." << std::endl;
 
-    TCanvas* c1 = new TCanvas("c1", "All Particles", 2560, 1600);
+    TCanvas* c1 = new TCanvas("c1", "Cez Source: All Particles", 2560, 1600);
     c1->SetLogy();
     c1->SetRightMargin(0.03);
     hAllParticles->SetLineColor(kBlack);
@@ -156,7 +185,7 @@ void Histogram(const char* fileName = "") {
     hAllParticles->Draw("HIST");
     c1->SaveAs("hist_all_particles.pdf");
 
-    TCanvas* c2 = new TCanvas("c2", "All Photons", 2560, 1600);
+    TCanvas* c2 = new TCanvas("c2", "Cez Source: All Photons", 2560, 1600);
     c2->SetLogy();
     c2->SetRightMargin(0.03);
     hAllPhotons->SetLineColor(kBlack);
@@ -164,7 +193,7 @@ void Histogram(const char* fileName = "") {
     hAllPhotons->Draw("HIST");
     c2->SaveAs("hist_all_photons.pdf");
 
-    TCanvas* c3 = new TCanvas("c3", "Primary Photons", 2560, 1600);
+    TCanvas* c3 = new TCanvas("c3", "Cez Source: Primary Photons", 2560, 1600);
     c3->SetLogy();
     c3->SetRightMargin(0.03);
     hPrimaryPhotons->SetLineColor(kBlack);
@@ -172,5 +201,17 @@ void Histogram(const char* fileName = "") {
     hPrimaryPhotons->Draw("HIST");
     c3->SaveAs("hist_primary_photons.pdf");
 
+    TCanvas* c4 = new TCanvas("c4", "Cez Source: Secondary Photons", 2560, 1600);
+    c4->SetLogy();
+    c4->SetRightMargin(0.03);
+    hSecPhotons->SetLineColor(kBlack);
+    hSecPhotons->SetLineStyle(1);
+    hSecPhotons->Draw("HIST");
+    c4->SaveAs("hist_sec_photons.pdf");
+
     std::cout << "[INFO] All plots saved. Done!" << std::endl;
 }
+
+
+
+
